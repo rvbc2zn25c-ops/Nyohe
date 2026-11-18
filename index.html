@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アブラクサス・リブート号 大気＆コーヒー観測システム</title>
+  <style>
+    :root { --accent:#00f2fe; --gold:#ffd700; --card:#11182c; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:15px; font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif; color:#fff; background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); transition:.4s; }
+    body.god-mode { background:linear-gradient(135deg,#4b0082,#ff007f,#ff8c00); }
+    body.clean-mode { background:linear-gradient(135deg,#e0eafc,#cfdef3); color:#222; }
+    body.coffee-mode { background:linear-gradient(135deg,#1e130c,#4a2c18,#000); }
+    body.lizard-mode { background:linear-gradient(135deg,#bdc3c7,#2c3e50); filter:grayscale(75%); }
+    .terminal { width:100%; max-width:500px; padding:1.5rem; border:2px solid var(--accent); border-radius:20px; background:rgba(15,20,38,.96); box-shadow:0 0 30px rgba(0,242,254,.35); }
+    body.clean-mode .terminal { background:rgba(255,255,255,.96); border-color:#3498db; }
+    .badge { display:inline-block; margin-bottom:6px; padding:3px 10px; border-radius:20px; background:var(--accent); color:#000; font-size:.72rem; font-weight:bold; }
+    h1 { margin:0 0 .8rem; font-size:1.2rem; }
+    select { width:100%; margin-bottom:1rem; padding:10px; border:1px solid var(--accent); border-radius:10px; background:#26334f; color:#fff; }
+    .weather { margin-bottom:.8rem; padding:.9rem; text-align:center; border-radius:15px; background:rgba(255,255,255,.06); }
+    #icon { font-size:3.8rem; }
+    #desc { margin:4px 0; font-size:1.1rem; font-weight:bold; }
+    #temp { color:var(--gold); font-size:2.5rem; font-weight:800; }
+    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:.9rem; }
+    .metric { padding:8px 10px; border-left:3px solid var(--accent); border-radius:10px; background:rgba(0,0,0,.35); font-size:.82rem; }
+    .value { margin-top:2px; font-size:1.05rem; font-weight:bold; }
+    .title { margin:.8rem 0 .4rem; color:var(--accent); font-size:.85rem; font-weight:bold; }
+    .weekly { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:1rem; }
+    .day { min-width:0; padding:6px 2px; border-radius:8px; background:rgba(255,255,255,.07); text-align:center; font-size:.72rem; }
+    .day-icon { margin:3px 0; font-size:1.3rem; }
+    .max { color:#ff7675; font-weight:bold; }.min { color:#74b9ff; }
+    .coffee,.character { margin-bottom:.9rem; padding:10px 12px; border-radius:12px; }
+    .coffee { border:1px solid #d4a373; background:linear-gradient(135deg,rgba(111,78,55,.35),rgba(62,39,35,.55)); }
+    .coffee-header { color:#d4a373; font-size:.78rem; font-weight:bold; }
+    #coffee-name { margin:4px 0; color:var(--gold); font-size:1.05rem; font-weight:bold; }
+    #coffee-item { display:inline-block; margin-bottom:5px; padding:2px 8px; border:1px solid rgba(255,215,0,.4); border-radius:6px; background:rgba(255,215,0,.15); font-size:.76rem; }
+    #coffee-desc { font-size:.82rem; line-height:1.45; }
+    .character { border:1px solid rgba(0,242,254,.4); background:rgba(0,242,254,.1); font-size:.85rem; line-height:1.45; }
+    .char-name { display:flex; justify-content:space-between; margin-bottom:3px; color:var(--accent); font-size:.82rem; font-weight:bold; }
+    .buttons { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:.8rem; }
+    button { padding:8px 5px; border:0; border-radius:8px; color:#fff; font-size:.76rem; font-weight:bold; cursor:pointer; }
+    button:active { transform:scale(.96); }
+    .god { background:linear-gradient(45deg,#ff416c,#ff4b2b); }.clean { background:linear-gradient(45deg,#00b4db,#0083b0); }.coffee-btn { background:linear-gradient(45deg,#6f4e37,#3e2723); color:var(--gold); }.lizard { background:linear-gradient(45deg,#7f8c8d,#34495e); }
+    #status { text-align:right; font-size:.7rem; opacity:.75; }
+  </style>
+</head>
+<body>
+  <main class="terminal">
+    <div class="badge">アブラクサス・リブート号 週間観測端末</div>
+    <h1>☕ にょへべカフェ 大気＆珈琲レーダー</h1>
+
+    <select id="city">
+      <option value="35.3039,136.8031,nyohe">愛知県一宮市（にょへー）</option>
+      <option value="35.6895,139.6917,nyohe">東京（にょへー）</option>
+      <option value="35.1815,136.9066,solid">名古屋（ミス・ソリッド）</option>
+      <option value="34.6937,135.5023,gas">大阪（ゴースト・ガス）</option>
+      <option value="43.0618,141.3545,shikaku">札幌（四角四面局長）</option>
+      <option value="33.5902,130.4017,poporo">福岡（ポポロ・ピッツァ）</option>
+      <option value="26.2124,127.6809,nekutai">那覇（ネクタイ・サマ）</option>
+      <option value="38.2682,140.8694,hakobe">仙台（ハコベ・デリバリー）</option>
+    </select>
+
+    <section class="weather">
+      <div id="icon">⏳</div><div id="desc">大気データスキャン中...</div><div id="temp">--°C</div>
+    </section>
+
+    <section class="metrics">
+      <div class="metric">💦 現在の湿度<div class="value" id="humidity">-- %</div></div>
+      <div class="metric">💨 現在の風速<div class="value" id="wind">-- m/s</div></div>
+      <div class="metric">💓 心拍数<div class="value" id="bpm">700 BPM</div></div>
+      <div class="metric">💧 じわり指数<div class="value" id="jiwari">-- %</div></div>
+    </section>
+
+    <div class="title">📅 一週間分の天気予報</div>
+    <div class="weekly" id="weekly"></div>
+
+    <section class="coffee">
+      <div class="coffee-header">☕ 料理長50号セレクト：実在コーヒー</div>
+      <div id="coffee-name">選定中...</div>
+      <div id="coffee-item">解析中...</div>
+      <div id="coffee-desc">大気と湿度のバランスを解析しています...</div>
+    </section>
+
+    <section class="character">
+      <div class="char-name"><span id="char-title">【船長】にょへー</span><span id="char-mode">通常モード</span></div>
+      <div id="comment">ブラック・エゴイストを淹れながら大気を観測中だにょ！</div>
+    </section>
+
+    <div class="buttons">
+      <button class="god" onclick="godMode()">🔥 神の領域</button>
+      <button class="clean" onclick="cleanMode()">✨ 絶対消臭</button>
+      <button class="coffee-btn" onclick="coffeeMode()">☕ エゴイスト抽出</button>
+      <button class="lizard" onclick="lizardMode()">🦎 トカゲ襲来</button>
+    </div>
+    <div id="status">通信ステータス: 待機中...</div>
+  </main>
+
+<script>
+const city = document.getElementById('city');
+const el = id => document.getElementById(id);
+
+function resetModes() {
+  document.body.classList.remove('god-mode','clean-mode','coffee-mode','lizard-mode');
+}
+
+function weatherInfo(code) {
+  if (code === 0) return ['☀️','快晴','sunny'];
+  if (code <= 3) return ['⛅','晴れ時々曇り','cloudy'];
+  if (code <= 48) return ['🌫️','濃霧','fog'];
+  if (code <= 67) return ['☔','雨','rain'];
+  if (code <= 77) return ['❄️','雪','snow'];
+  if (code <= 82) return ['🌦️','にわか雨','rain'];
+  if (code >= 95) return ['⚡','雷雨','thunder'];
+  return ['☁️','曇り','cloudy'];
+}
+
+function updateCoffee(type,temp,humidity) {
+  let coffee;
+  if (type === 'rain' || humidity >= 75) coffee = ['インドネシア・マンデリン G1','スターバックス「スマトラ」 / カルディ「マンデリンフレンチ」','重厚なコクとハーブの香り��湿度が高い日は濃厚なカフェオレにも合うにょ！'];
+  else if (type === 'sunny' && temp >= 22) coffee = ['エチオピア・イルガチェフェ G1','ブルーボトル「ベラ・ドノヴァン」 / セブンカフェ','華やかなベリーの香り。晴れた日はアイスコーヒーが爽快だにょ！'];
+  else if (temp <= 14 || type === 'snow') coffee = ['グアテマラ・アンティグア','スターバックス「カフェ ベロナ」','甘いココアのようなコク。寒い日は熱々に淹れてポカポカだにょ！'];
+  else coffee = ['ブラジル・サントス No.2','ドトール「ブレンドコーヒー」','苦味・酸味・コクの黄金バランス。穏やかな日は王道のブラジル豆だにょ！'];
+  el('coffee-name').textContent = coffee[0];
+  el('coffee-item').textContent = '身近で買える一杯：' + coffee[1];
+  el('coffee-desc').textContent = coffee[2];
+}
+
+function updateCharacter(charId,type,temp,humidity) {
+  resetModes();
+  let bpm = 700, mode = '通常流動モード';
+  if (type === 'sunny' && humidity < 45) { bpm = 45; mode = 'プロ探偵モード'; }
+  if (type === 'rain' || type === 'thunder') { bpm = 3000; mode = 'ハイドロ活性モード'; }
+  el('bpm').textContent = bpm + ' BPM';
+  el('jiwari').textContent = Math.min(100,Math.max(10,Math.round(humidity*1.1))) + ' %';
+  el('char-mode').textContent = mode;
+
+  const names = {
+    nyohe:['☕ 【船長】にょへー','気温'+temp+'°C、最高の流動だにょ！101人のにょへべ達も元気にコーヒーを淹れてるにょ！'],
+    solid:['❄️ 【助手】ミス・ソリッド','今日の天候に合わせた実在コーヒー豆を用意するわ。角砂糖は正六面体に凍らせておくわね。'],
+    gas:['💨 【大気解析】ゴースト・ガス','気圧と風速を解析したぞ。焙煎したての香りが気流に乗って拡散している…！'],
+    shikaku:['📐 【常連】四角四面局長','週間予報まで寸分の狂いもなく整っているな！実に堅いバランスだ！'],
+    poporo:['🛵 【常連】ポポロ・ピッツァ','一週間どんな天気でも関係ないへべち！マッハ100で配達するへべち！'],
+    nekutai:['👔 【常連】ネクタイ・サマ','寒暖差の激しい日は、50号さんのコーヒーを胃薬代わりに頂きます。'],
+    hakobe:['📦 【常連】ハコベ・デリバリー','週間予報のおかげで荷物も安全運転できそうです！へべっ！']
+  };
+  const selected = names[charId] || names.nyohe;
+  el('char-title').textContent = selected[0];
+  el('comment').textContent = '「' + selected[1] + '」';
+}
+
+function renderWeekly(daily) {
+  const names = ['日','月','火','水','木','金','土'];
+  el('weekly').replaceChildren();
+  for (let i=0;i<Math.min(7,daily.time.length);i++) {
+    const [y,m,d] = daily.time[i].split('-').map(Number);
+    const date = new Date(y,m-1,d);
+    const weather = weatherInfo(daily.weather_code[i]);
+    const card = document.createElement('div');
+    card.className = 'day';
+    card.innerHTML = `<div>${m}/${d}(${names[date.getDay()]})</div><div class="day-icon">${weather[0]}</div><div class="max">${Math.round(daily.temperature_2m_max[i])}°</div><div class="min">${Math.round(daily.temperature_2m_min[i])}°</div>`;
+    el('weekly').appendChild(card);
+  }
+}
+
+async function fetchWeather() {
+  const [lat,lon,charId] = city.value.split(',');
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
+  url.search = new URLSearchParams({latitude:lat,longitude:lon,current:'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m',daily:'weather_code,temperature_2m_max,temperature_2m_min',wind_speed_unit:'ms',timezone:'Asia/Tokyo'});
+  el('desc').textContent = 'アブラクサス号レーダー受信中...';
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(),8000);
+
+  try {
+    const response = await fetch(url,{signal:controller.signal});
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    render(data,charId,'リアルタイム衛星受信成功');
+  } catch (error) {
+    console.warn(error);
+    const temp = Math.round(14 + parseFloat(lat)%6);
+    const humidity = Math.round(55 + parseFloat(lon)%20);
+    const times = [], codes = [], maxes = [], mins = [];
+    for (let i=0;i<7;i++) {
+      const date = new Date(); date.setDate(date.getDate()+i);
+      times.push(date.toISOString().slice(0,10));
+      codes.push(i%3===0 ? 1 : 3);
+      maxes.push(temp+i%3); mins.push(temp-7+i%2);
+    }
+    render({current:{temperature_2m:temp,relative_humidity_2m:humidity,weather_code:1,wind_speed_10m:3.1},daily:{time:times,weather_code:codes,temperature_2m_max:maxes,temperature_2m_min:mins}},charId,'バックアップ観測モード（推定値）');
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function render(data,charId,status) {
+  const c = data.current;
+  const weather = weatherInfo(c.weather_code);
+  el('icon').textContent = weather[0];
+  el('desc').textContent = weather[1];
+  el('temp').textContent = c.temperature_2m + '°C';
+  el('humidity').textContent = c.relative_humidity_2m + ' %';
+  el('wind').textContent = c.wind_speed_10m + ' m/s';
+  renderWeekly(data.daily);
+  updateCoffee(weather[2],c.temperature_2m,c.relative_humidity_2m);
+  updateCharacter(charId,weather[2],c.temperature_2m,c.relative_humidity_2m);
+  const now = new Date();
+  el('status').textContent = '最終更新 ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ' | ' + status;
+}
+
+function godMode() { resetModes(); document.body.classList.add('god-mode'); el('icon').textContent='🔥'; el('desc').textContent='臨界突破：神の領域'; el('bpm').textContent='9000 BPM'; el('char-title').textContent='⚡ 【神の領域】にょへー'; el('comment').textContent='にょへぇぇぇーーー！すべての乾燥とバグを吹き飛ばすにょ！！'; }
+function cleanMode() { resetModes(); document.body.classList.add('clean-mode'); el('icon').textContent='✨'; el('desc').textContent='絶対消臭：完全無菌空間'; el('bpm').textContent='0 BPM'; el('char-title').textContent='🫧 【神界】ファブリーズ・オーディン'; el('comment').textContent='穢れた生乾きの湯気ごと浄化してくれよう！'; }
+function coffeeMode() { resetModes(); document.body.classList.add('coffee-mode'); el('icon').textContent='☕'; el('desc').textContent='ダーク・ロースト・エコー'; el('coffee-name').textContent='ブラック・エゴイスト（架空銘柄）'; el('coffee-item').textContent='身近な代替品：極深煎りのエスプレッソ'; el('char-title').textContent='👨‍🍳 【料理長】にょへべ50号'; el('comment').textContent='へべへべ！実在の地球のコーヒーも最高だにょ！'; }
+function lizardMode() { resetModes(); document.body.classList.add('lizard-mode'); el('icon').textContent='🦎'; el('desc').textContent='トカゲ・ハザード襲来'; el('char-title').textContent='🐾 【マスコット】へべちゃん'; el('comment').textContent='無機化トカゲは洗い流され、庭で日向ぼっこしているにょ！'; }
+
+city.addEventListener('change',fetchWeather);
+fetchWeather();
+</script>
+</body>
+</html>
